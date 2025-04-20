@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Ticker App</title>
+  <style>
+    /* Reset and Base */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; overflow: hidden; }
+
+    /* Header */
+    header {
+      display: flex;
+      background: #333;
+      padding: 10px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 10;
+    }
+    header button {
+      margin-right: 10px;
+      color: #fff;
+      background: #555;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    header button.active { background: #007acc; }
+
+    /* Hide header in fullscreen */
+    :fullscreen header { display: none !important; }
+
+    /* Sections */
+    section { display: none; height: 100vh; }
+    section.active { display: block; }
+
+    /* Admin Page Styling */
+    #sectionAdmin {
+      padding: 80px 20px 20px;
+      overflow-y: auto;
+    }
+    .control-group { margin-bottom: 15px; }
+    .control-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+    .control-group input { width: 100%; padding: 8px; }
+    #settingsButtons { margin-bottom: 20px; }
+    #settingsButtons button { margin-right: 10px; }
+    form { max-width: 500px; margin-bottom: 20px; }
+    form input { display: block; width: 100%; margin-bottom: 10px; padding: 8px; }
+    form button { padding: 10px 15px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    table th, table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+
+    /* Ticker Styling */
+    #sectionTicker { position: relative; }
+    .ticker-wrapper {
+      overflow: hidden;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      --item-height: 150px;
+      --name-font: 28.8px;
+      --price-font: 22.4px;
+      height: var(--section-height, 100vh);
+    }
+    .ticker-content-container {
+      display: inline-flex;
+      animation: scroll linear infinite;
+    }
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 50px;
+      white-space: nowrap;
+    }
+    .ticker-item img {
+      height: var(--item-height);
+      width: auto;
+      object-fit: contain;
+      margin-right: 20px;
+    }
+    .ticker-item-details { display: flex; flex-direction: column; }
+    .ticker-item-name {
+      font-size: var(--name-font);
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #000;
+    }
+    .ticker-prices { display: flex; }
+    .ticker-prices .old-price,
+    .ticker-prices .new-price {
+      flex: 1;
+      font-size: var(--price-font);
+      text-align: center;
+      padding: 0 10px;
+      position: relative;
+    }
+    /* Strikethrough on old price */
+    .ticker-prices .old-price {
+      color: #000;
+      border-right: 1px solid #000;
+      text-decoration: line-through;
+    }
+    .ticker-prices .new-price { color: #e60000; }
+
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="btnAdmin" class="active">Admin</button>
+    <button id="btnTicker">Ticker</button>
+    <button id="fullscreenBtn">Full Screen</button>
+  </header>
+
+  <section id="sectionAdmin" class="active">
+    <h2>Admin Page</h2>
+    <div id="settingsButtons">
+      <button id="exportBtn">Export Settings</button>
+      <button id="importBtn">Import Settings</button>
+      <button id="exportProdBtn">Export Products</button>
+      <button id="importProdBtn">Import Products</button>
+      <input type="file" id="importInput" accept="application/json" style="display:none;">
+      <input type="file" id="importProdInput" accept="application/json" style="display:none;">
+    </div>
+    <div class="control-group">
+      <label for="speedInput">Scroll speed (seconds per 100px):</label>
+      <input type="number" id="speedInput" min="0.1" max="10" step="0.1">
+    </div>
+    <div class="control-group">
+      <label for="heightInput">Ticker section height (px):</label>
+      <input type="number" id="heightInput" min="100" max="2000" step="10">
+    </div>
+    <div class="control-group">
+      <label for="itemHeightInput">Ticker item height (px):</label>
+      <input type="number" id="itemHeightInput" min="50" max="500" step="10">
+    </div>
+    <div class="control-group">
+      <label for="nameFontInput">Product name font size (px):</label>
+      <input type="number" id="nameFontInput" min="10" max="100" step="1">
+    </div>
+    <div class="control-group">
+      <label for="priceFontInput">Price font size (px):</label>
+      <input type="number" id="priceFontInput" min="10" max="100" step="1">
+    </div>
+    <form id="productForm">
+      <input type="text" id="name" placeholder="Product Name" required>
+      <input type="text" id="oldPrice" placeholder="Old Price" required>
+      <input type="text" id="newPrice" placeholder="New Price" required>
+      <input type="url" id="imageUrl" placeholder="Image URL" required>
+      <button type="submit">Save Product</button>
+    </form>
+    <table>
+      <thead>
+        <tr><th>Image</th><th>Name</th><th>Old Price</th><th>New Price</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="productList"></tbody>
+    </table>
+  </section>
+
+  <section id="sectionTicker">
+    <div class="ticker-wrapper" id="tickerWrapper">
+      <div class="ticker-content-container" id="tickerContent"></div>
+    </div>
+  </section>
+
+  <script>
+    // Load settings and products
+    let products = JSON.parse(localStorage.getItem('products') || '[]');
+    let speed = parseFloat(localStorage.getItem('tickerSpeed')) || 0.5;
+    let heightPx = parseInt(localStorage.getItem('tickerHeight')) || window.innerHeight;
+    let itemHeight = parseInt(localStorage.getItem('tickerItemHeight')) || 150;
+    let nameFont = parseFloat(localStorage.getItem('tickerNameFont')) || 28.8;
+    let priceFont = parseFloat(localStorage.getItem('tickerPriceFont')) || 22.4;
+
+    // DOM elements
+    const form = document.getElementById('productForm');
+    const productList = document.getElementById('productList');
+    const tickerContent = document.getElementById('tickerContent');
+    const tickerWrapper = document.getElementById('tickerWrapper');
+    const speedInput = document.getElementById('speedInput');
+    const heightInput = document.getElementById('heightInput');
+    const itemHeightInput = document.getElementById('itemHeightInput');
+    const nameFontInput = document.getElementById('nameFontInput');
+    const priceFontInput = document.getElementById('priceFontInput');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const exportProdBtn = document.getElementById('exportProdBtn');
+    const importProdBtn = document.getElementById('importProdBtn');
+    const importInput = document.getElementById('importInput');
+    const importProdInput = document.getElementById('importProdInput');
+    const btnAdmin = document.getElementById('btnAdmin');
+    const btnTicker = document.getElementById('btnTicker');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    let editIndex = -1;
+
+    // Initialize controls
+    speedInput.value = speed;
+    heightInput.value = heightPx;
+    itemHeightInput.value = itemHeight;
+    nameFontInput.value = nameFont;
+    priceFontInput.value = priceFont;
+    applyAll(); renderAdmin(); renderTicker();
+
+    // Event listeners
+    speedInput.addEventListener('change', onSpeedChange);
+    heightInput.addEventListener('change', onHeightChange);
+    itemHeightInput.addEventListener('change', onItemHeightChange);
+    nameFontInput.addEventListener('change', onNameFontChange);
+    priceFontInput.addEventListener('change', onPriceFontChange);
+    form.addEventListener('submit', onFormSubmit);
+    exportBtn.addEventListener('click', onExport);
+    importBtn.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', onImportFile);
+    exportProdBtn.addEventListener('click', onExportProducts);
+    importProdBtn.addEventListener('click', () => importProdInput.click());
+    importProdInput.addEventListener('change', onImportProductsFile);
+    btnAdmin.addEventListener('click', () => switchSection('Admin'));
+    btnTicker.addEventListener('click', () => switchSection('Ticker'));
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    });
+    document.addEventListener('fullscreenchange', () => {
+      fullscreenBtn.textContent = document.fullscreenElement ? 'Exit Full Screen' : 'Full Screen';
+    });
+
+    // Handlers
+    function onSpeedChange() { speed = parseFloat(speedInput.value) || 0.5; localStorage.setItem('tickerSpeed', speed); renderTicker(); }
+    function onHeightChange() { heightPx = parseInt(heightInput.value) || window.innerHeight; localStorage.setItem('tickerHeight', heightPx); tickerWrapper.style.height = heightPx + 'px'; }
+    function onItemHeightChange() { itemHeight = parseInt(itemHeightInput.value) || 150; localStorage.setItem('tickerItemHeight', itemHeight); tickerWrapper.style.setProperty('--item-height', itemHeight + 'px'); renderTicker(); }
+    function onNameFontChange() { nameFont = parseFloat(nameFontInput.value) || 28.8; localStorage.setItem('tickerNameFont', nameFont); tickerWrapper.style.setProperty('--name-font', nameFont + 'px'); }
+    function onPriceFontChange() { priceFont = parseFloat(priceFontInput.value) || 22.4; localStorage.setItem('tickerPriceFont', priceFont); tickerWrapper.style.setProperty('--price-font', priceFont + 'px'); }
+    function onFormSubmit(e) { e.preventDefault(); const p = { name: form.name.value, oldPrice: form.oldPrice.value, newPrice: form.newPrice.value, imageUrl: form.imageUrl.value }; if (editIndex > -1) { products[editIndex] = p; editIndex = -1; } else products.push(p); form.reset(); localStorage.setItem('products', JSON.stringify(products)); renderAdmin(); renderTicker(); }
+    function onExport() { const settings = { speed, heightPx, itemHeight, nameFont, priceFont }; const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'settings.json'; a.click(); URL.revokeObjectURL(url); }
+    function onImportFile(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const data = JSON.parse(reader.result); speed = data.speed || speed; heightPx = data.heightPx || heightPx; itemHeight = data.itemHeight || itemHeight; nameFont = data.nameFont || nameFont; priceFont = data.priceFont || priceFont; localStorage.setItem('tickerSpeed', speed); localStorage.setItem('tickerHeight', heightPx); localStorage.setItem('tickerItemHeight', itemHeight); localStorage.setItem('tickerNameFont', nameFont); localStorage.setItem('tickerPriceFont', priceFont); applyAll(); renderTicker(); speedInput.value = speed; heightInput.value = heightPx; itemHeightInput.value = itemHeight; nameFontInput.value = nameFont; priceFontInput.value = priceFont; } catch { alert('Invalid settings file'); } }; reader.readAsText(file); importInput.value = ''; }
+    function onExportProducts() { const blob = new Blob([JSON.stringify(products, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'products.json'; a.click(); URL.revokeObjectURL(url); }
+    function onImportProductsFile(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const data = JSON.parse(reader.result); if (Array.isArray(data)) { products = data; localStorage.setItem('products', JSON.stringify(products)); renderAdmin(); renderTicker(); } else throw Error(); } catch { alert('Invalid products file'); } }; reader.readAsText(file); importProdInput.value = ''; }
+    function switchSection(section) { if (section === 'Admin') { btnAdmin.classList.add('active'); btnTicker.classList.remove('active'); document.getElementById('sectionAdmin').classList.add('active'); document.getElementById('sectionTicker').classList.remove('active'); } else { btnTicker.classList.add('active'); btnAdmin.classList.remove('active'); document.getElementById('sectionTicker').classList.add('active'); document.getElementById('sectionAdmin').classList.remove('active'); } }
+    function applyAll() { tickerWrapper.style.height = heightPx + 'px'; tickerWrapper.style.setProperty('--item-height', itemHeight + 'px'); tickerWrapper.style.setProperty('--name-font', nameFont + 'px'); tickerWrapper.style.setProperty('--price-font', priceFont + 'px'); }
+    function renderAdmin() { productList.innerHTML = ''; products.forEach((p, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td><img src="${p.imageUrl}" height="50"></td><td>${p.name}</td><td>${p.oldPrice}</td><td>${p.newPrice}</td><td><button onclick="editProduct(${i})">Edit</button> <button onclick="deleteProduct(${i})">Delete</button></td>`; productList.appendChild(tr); }); }
+    function renderTicker() { tickerContent.innerHTML = ''; products.concat(products).forEach(p => tickerContent.appendChild(createItem(p))); const originals = Array.from(tickerContent.children).slice(0, products.length); let totalWidth = originals.reduce((sum, el) => sum + el.getBoundingClientRect().width + 50, 0); const duration = (totalWidth / 100) * speed; tickerContent.style.animationDuration = duration + 's'; }
+    function createItem(p) { const item = document.createElement('div'); item.className = 'ticker-item'; item.innerHTML = `<img src="${p.imageUrl}"><div class="ticker-item-details"><div class="ticker-item-name">${p.name}</div><div class="ticker-prices"><span class="old-price">${p.oldPrice}</span><span class="new-price">${p.newPrice}</span></div></div>`; return item; }
+    function deleteProduct(i) { products.splice(i, 1); localStorage.setItem('products', JSON.stringify(products)); renderAdmin(); renderTicker(); }
+    function editProduct(i) { const p = products[i]; form.name.value = p.name; form.oldPrice.value = p.oldPrice; form.newPrice.value = p.newPrice; form.imageUrl.value = p.imageUrl; editIndex = i; }
+  </script>
+</body>
+</html>
