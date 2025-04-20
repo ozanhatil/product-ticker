@@ -36,15 +36,12 @@
     section.active { display: block; }
 
     /* Admin Page Styling */
-    #sectionAdmin {
-      padding: 80px 20px 20px;
-      overflow-y: auto;
-    }
+    #sectionAdmin { padding: 80px 20px 20px; overflow-y: auto; }
     .control-group { margin-bottom: 15px; }
     .control-group label { display: block; margin-bottom: 5px; font-weight: bold; }
     .control-group input { width: 100%; padding: 8px; }
     #settingsButtons { margin-bottom: 20px; }
-    #settingsButtons button, #settingsButtons input { margin-right: 10px; }
+    #settingsButtons button { margin-right: 10px; }
     form { max-width: 500px; margin-bottom: 20px; }
     form input { display: block; width: 100%; margin-bottom: 10px; padding: 8px; }
     form button { padding: 10px 15px; }
@@ -63,48 +60,16 @@
       --price-font: 22.4px;
       height: var(--section-height, 100vh);
     }
-    .ticker-content-container {
-      display: inline-flex;
-      animation: scroll linear infinite;
-    }
-    .ticker-item {
-      display: inline-flex;
-      align-items: center;
-      margin-right: 50px;
-      white-space: nowrap;
-    }
-    .ticker-item img {
-      height: var(--item-height);
-      width: auto;
-      object-fit: contain;
-      margin-right: 20px;
-    }
+    .ticker-content-container { display: inline-flex; animation: scroll linear infinite; }
+    .ticker-item { display: inline-flex; align-items: center; margin-right: 50px; white-space: nowrap; }
+    .ticker-item img { height: var(--item-height); width: auto; object-fit: contain; margin-right: 20px; }
     .ticker-item-details { display: flex; flex-direction: column; }
-    .ticker-item-name {
-      font-size: var(--name-font);
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #000;
-    }
+    .ticker-item-name { font-size: var(--name-font); font-weight: bold; margin-bottom: 10px; color: #000; }
     .ticker-prices { display: flex; }
-    .ticker-prices .old-price,
-    .ticker-prices .new-price {
-      flex: 1;
-      font-size: var(--price-font);
-      text-align: center;
-      padding: 0 10px;
-    }
-    .ticker-prices .old-price {
-      color: #000;
-      border-right: 1px solid #000;
-      text-decoration: line-through;
-    }
+    .ticker-prices .old-price, .ticker-prices .new-price { flex: 1; font-size: var(--price-font); text-align: center; padding: 0 10px; }
+    .ticker-prices .old-price { color: #000; border-right: 1px solid #000; text-decoration: line-through; }
     .ticker-prices .new-price { color: #e60000; }
-
-    @keyframes scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
+    @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
   </style>
 </head>
 <body>
@@ -126,26 +91,11 @@
       <input type="file" id="importInput" accept="application/json" style="display:none;">
       <input type="file" id="importProdInput" accept="application/json" style="display:none;">
     </div>
-    <div class="control-group">
-      <label for="speedInput">Scroll speed (seconds per 100px):</label>
-      <input type="number" id="speedInput" min="0.1" max="10" step="0.1">
-    </div>
-    <div class="control-group">
-      <label for="heightInput">Ticker section height (px):</label>
-      <input type="number" id="heightInput" min="100" max="2000" step="10">
-    </div>
-    <div class="control-group">
-      <label for="itemHeightInput">Ticker item height (px):</label>
-      <input type="number" id="itemHeightInput" min="50" max="500" step="10">
-    </div>
-    <div class="control-group">
-      <label for="nameFontInput">Product name font size (px):</label>
-      <input type="number" id="nameFontInput" min="10" max="100" step="1">
-    </div>
-    <div class="control-group">
-      <label for="priceFontInput">Price font size (px):</label>
-      <input type="number" id="priceFontInput" min="10" max="100" step="1">
-    </div>
+    <div class="control-group"><label for="speedInput">Scroll speed (seconds per 100px):</label><input type="number" id="speedInput" min="0.1" max="10" step="0.1"></div>
+    <div class="control-group"><label for="heightInput">Ticker section height (px):</label><input type="number" id="heightInput" min="100" max="2000" step="10"></div>
+    <div class="control-group"><label for="itemHeightInput">Ticker item height (px):</label><input type="number" id="itemHeightInput" min="50" max="500" step="10"></div>
+    <div class="control-group"><label for="nameFontInput">Product name font size (px):</label><input type="number" id="nameFontInput" min="10" max="100" step="1"></div>
+    <div class="control-group"><label for="priceFontInput">Price font size (px):</label><input type="number" id="priceFontInput" min="10" max="100" step="1"></div>
     <form id="productForm">
       <input type="text" id="name" placeholder="Product Name" required>
       <input type="text" id="oldPrice" placeholder="Old Price" required>
@@ -154,21 +104,19 @@
       <button type="submit">Save Product</button>
     </form>
     <table>
-      <thead>
-        <tr><th>Image</th><th>Name</th><th>Old Price</th><th>New Price</th><th>Actions</th></tr>
-      </thead>
+      <thead><tr><th>Image</th><th>Name</th><th>Old Price</th><th>New Price</th><th>Actions</th></tr></thead>
       <tbody id="productList"></tbody>
     </table>
   </section>
 
   <section id="sectionTicker">
-    <div class="ticker-wrapper" id="tickerWrapper">
-      <div class="ticker-content-container" id="tickerContent"></div>
-    </div>
+    <div class="ticker-wrapper" id="tickerWrapper"><div class="ticker-content-container" id="tickerContent"></div></div>
   </section>
 
   <script>
-    // Defaults from localStorage (fallback)
+    const GITHUB_TOKEN = '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';
+
+    // Fallback defaults
     let products = JSON.parse(localStorage.getItem('products') || '[]');
     let speed = parseFloat(localStorage.getItem('tickerSpeed')) || 0.5;
     let heightPx = parseInt(localStorage.getItem('tickerHeight')) || window.innerHeight;
@@ -176,7 +124,7 @@
     let nameFont = parseFloat(localStorage.getItem('tickerNameFont')) || 28.8;
     let priceFont = parseFloat(localStorage.getItem('tickerPriceFont')) || 22.4;
 
-    // DOM elements
+    // DOM refs
     const form = document.getElementById('productForm');
     const productList = document.getElementById('productList');
     const tickerContent = document.getElementById('tickerContent');
@@ -197,85 +145,66 @@
     const btnAdmin = document.getElementById('btnAdmin');
     const btnTicker = document.getElementById('btnTicker');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const ghTokenInput = "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";
     let editIndex = -1;
 
-    // Initialize after fetching global JSONs
+    // Init fetch
     async function init() {
-      // Load global settings.json
       try {
         const resp = await fetch('settings.json');
-        if (resp.ok) {
-          const s = await resp.json();
-          speed = s.speed ?? speed;
-          heightPx = s.heightPx ?? heightPx;
-          itemHeight = s.itemHeight ?? itemHeight;
-          nameFont = s.nameFont ?? nameFont;
-          priceFont = s.priceFont ?? priceFont;
-        }
+        if (resp.ok) Object.assign(this, await resp.json());
       } catch {}
-      // Load global products.json
       try {
         const resp2 = await fetch('products.json');
         if (resp2.ok) products = await resp2.json();
       } catch {}
-
-      // Sync UI inputs
       speedInput.value = speed;
       heightInput.value = heightPx;
       itemHeightInput.value = itemHeight;
       nameFontInput.value = nameFont;
       priceFontInput.value = priceFont;
-
-      applyAll();
-      renderAdmin();
-      renderTicker();
+      applyAll(); renderAdmin(); renderTicker();
     }
 
-    // Event listeners
-    speedInput.addEventListener('change', onSpeedChange);
-    heightInput.addEventListener('change', onHeightChange);
-    itemHeightInput.addEventListener('change', onItemHeightChange);
-    nameFontInput.addEventListener('change', onNameFontChange);
-    priceFontInput.addEventListener('change', onPriceFontChange);
-    form.addEventListener('submit', onFormSubmit);
-    exportBtn.addEventListener('click', onExportSettings);
-    importBtn.addEventListener('click', () => importInput.click());
-    importInput.addEventListener('change', onImportSettingsFile);
-    saveSettingsBtn.addEventListener('click', saveSettingsToGitHub);
-    saveProductsBtn.addEventListener('click', saveProductsToGitHub);
-    exportProdBtn.addEventListener('click', onExportProducts);
-    importProdBtn.addEventListener('click', () => importProdInput.click());
-    importProdInput.addEventListener('change', onImportProductsFile);
-    btnAdmin.addEventListener('click', () => switchSection('Admin'));
-    btnTicker.addEventListener('click', () => switchSection('Ticker'));
-    fullscreenBtn.addEventListener('click', () => {
-      document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
-    });
-    document.addEventListener('fullscreenchange', () => {
-      fullscreenBtn.textContent = document.fullscreenElement ? 'Exit Full Screen' : 'Full Screen';
-    });
+    // Events
+    speedInput.onchange = onSpeedChange;
+    heightInput.onchange = onHeightChange;
+    itemHeightInput.onchange = onItemHeightChange;
+    nameFontInput.onchange = onNameFontChange;
+    priceFontInput.onchange = onPriceFontChange;
+    form.onsubmit = onFormSubmit;
+    exportBtn.onclick = onExportSettings;
+    importBtn.onclick = () => importInput.click();
+    importInput.onchange = onImportSettingsFile;
+    saveSettingsBtn.onclick = saveSettingsToGitHub;
+    saveProductsBtn.onclick = saveProductsToGitHub;
+    exportProdBtn.onclick = onExportProducts;
+    importProdBtn.onclick = () => importProdInput.click();
+    importProdInput.onchange = onImportProductsFile;
+    btnAdmin.onclick = () => switchSection('Admin');
+    btnTicker.onclick = () => switchSection('Ticker');
+    fullscreenBtn.onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    document.onfullscreenchange = () => fullscreenBtn.textContent = document.fullscreenElement ? 'Exit Full Screen' : 'Full Screen';
 
-    // Handlers & Utilities (unchanged from working baseline)
+    // Handlers
     function onSpeedChange() { speed = parseFloat(speedInput.value)||0.5; localStorage.setItem('tickerSpeed', speed); renderTicker(); }
     function onHeightChange(){ heightPx = parseInt(heightInput.value)||window.innerHeight; localStorage.setItem('tickerHeight', heightPx); tickerWrapper.style.height = heightPx+'px'; }
     function onItemHeightChange(){ itemHeight = parseInt(itemHeightInput.value)||150; localStorage.setItem('tickerItemHeight', itemHeight); tickerWrapper.style.setProperty('--item-height', itemHeight+'px'); renderTicker(); }
     function onNameFontChange(){ nameFont = parseFloat(nameFontInput.value)||28.8; localStorage.setItem('tickerNameFont', nameFont); tickerWrapper.style.setProperty('--name-font', nameFont+'px'); }
     function onPriceFontChange(){ priceFont = parseFloat(priceFontInput.value)||22.4; localStorage.setItem('tickerPriceFont', priceFont); tickerWrapper.style.setProperty('--price-font', priceFont+'px'); }
-    function onFormSubmit(e){ e.preventDefault(); const p={name:form.name.value,oldPrice:form.oldPrice.value,newPrice:form.newPrice.value,imageUrl:form.imageUrl.value}; if(editIndex>-1){products[editIndex]=p; editIndex=-1;}else{products.push(p);} form.reset(); localStorage.setItem('products', JSON.stringify(products)); renderAdmin(); renderTicker(); }
+    function onFormSubmit(e){ e.preventDefault(); const p={name:form.name.value,oldPrice:form.oldPrice.value,newPrice:form.newPrice.value,imageUrl:form.imageUrl.value}; if(editIndex>-1){products[editIndex]=p;editIndex=-1;}else products.push(p); form.reset(); localStorage.setItem('products', JSON.stringify(products)); renderAdmin(); renderTicker(); }
     function onExportSettings(){ const b=new Blob([JSON.stringify({speed,heightPx,itemHeight,nameFont,priceFont},null,2)],{type:'application/json'}); const u=URL.createObjectURL(b); const a=document.createElement('a');a.href=u;a.download='settings.json';a.click();URL.revokeObjectURL(u);}    
-    function onImportSettingsFile(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{ try{const d=JSON.parse(r.result); speed=d.speed||speed; heightPx=d.heightPx||heightPx; itemHeight=d.itemHeight||itemHeight; nameFont=d.nameFont||nameFont; priceFont=d.priceFont||priceFont; localStorage.setItem('tickerSpeed',speed); localStorage.setItem('tickerHeight',heightPx); localStorage.setItem('tickerItemHeight',itemHeight); localStorage.setItem('tickerNameFont',nameFont); localStorage.setItem('tickerPriceFont',priceFont); applyAll(); renderTicker(); speedInput.value=speed; heightInput.value=heightPx; itemHeightInput.value=itemHeight; nameFontInput.value=nameFont; priceFontInput.value=priceFont;}catch{alert('Invalid settings file');}}; r.readAsText(f); importInput.value=''; }
-    async function saveSettingsToGitHub(){ const token=ghTokenInput.value.trim(); if(!token)return alert('Enter your GitHub Token'); const owner='ozanhatil',repo='product-ticker',path='settings.json',branch='main'; const apiUrl=`https://api.github.com/repos/${owner}/${repo}/contents/${path}`; let sha; try{const res=await fetch(apiUrl,{headers:{Authorization:`token ${token}`}}); const data=await res.json(); sha=data.sha;}catch{return alert('Error fetching settings.json SHA');} const content=JSON.stringify({speed,heightPx,itemHeight,nameFont,priceFont},null,2); const b64=btoa(unescape(encodeURIComponent(content))); try{const putRes=await fetch(apiUrl,{method:'PUT',headers:{Authorization:`token ${token}`,'Content-Type':'application/json'},body:JSON.stringify({message:'Update settings via app',content:b64,sha,branch})}); if(!putRes.ok) throw new Error(); alert('settings.json updated');}catch{alert('Failed to update settings.json');} }
-    async function saveProductsToGitHub(){ const token=ghTokenInput.value.trim(); if(!token)return alert('Enter your GitHub Token'); const owner='ozanhatil',repo='product-ticker',path='products.json',branch='main'; const apiUrl=`https://api.github.com/repos/${owner}/${repo}/contents/${path}`; let sha; try{const res=await fetch(apiUrl,{headers:{Authorization:`token ${token}`}}); const data=await res.json(); sha=data.sha;}catch{return alert('Error fetching products.json SHA');} const content=JSON.stringify(products,null,2); const b64=btoa(unescape(encodeURIComponent(content))); try{const putRes=await fetch(apiUrl,{method:'PUT',headers:{Authorization:`token ${token}`,'Content-Type':'application/json'},body:JSON.stringify({message:'Update products via app',content:b64,sha,branch})}); if(!putRes.ok) throw new Error(); alert('products.json updated');}catch{alert('Failed to update products.json');} }
+    function onImportSettingsFile(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{try{const d=JSON.parse(r.result); speed=d.speed||speed;heightPx=d.heightPx||heightPx;itemHeight=d.itemHeight||itemHeight;nameFont=d.nameFont||nameFont;priceFont=d.priceFont||priceFont; localStorage.setItem('tickerSpeed',speed);localStorage.setItem('tickerHeight',heightPx);localStorage.setItem('tickerItemHeight',itemHeight);localStorage.setItem('tickerNameFont',nameFont);localStorage.setItem('tickerPriceFont',priceFont); applyAll(); renderTicker(); speedInput.value=speed;heightInput.value=heightPx;itemHeightInput.value=itemHeight;nameFontInput.value=nameFont;priceFontInput.value=priceFont;}catch{alert('Invalid settings file');}}; r.readAsText(f); importInput.value=''; }
+    async function saveSettingsToGitHub(){ const owner='ozanhatil',repo='product-ticker',path='settings.json',branch='main'; const apiUrl=`https://api.github.com/repos/${owner}/${repo}/contents/${path}`; let sha; try{const res=await fetch(apiUrl,{headers:{Authorization:`token ${GITHUB_TOKEN}`}});const data=await res.json();sha=data.sha;}catch{return alert('Error fetching settings.json SHA');} const content=JSON.stringify({speed,heightPx,itemHeight,nameFont,priceFont},null,2); const b64=btoa(unescape(encodeURIComponent(content))); try{const putRes=await fetch(apiUrl,{method:'PUT',headers:{Authorization:`token ${GITHUB_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({message:'Update settings via app',content:b64,sha,branch})}); if(!putRes.ok) throw new Error(); alert('settings.json updated');}catch{alert('Failed to update settings.json');} }
+    async function saveProductsToGitHub(){ const owner='ozanhatil',repo='product-ticker',path='products.json',branch='main'; const apiUrl=`https://api.github.com/repos/${owner}/${repo}/contents/${path}`; let sha; try{const res=await fetch(apiUrl,{headers:{Authorization:`token ${GITHUB_TOKEN}`}});const data=await res.json();sha=data.sha;}catch{return alert('Error fetching products.json SHA');} const content=JSON.stringify(products,null,2); const b64=btoa(unescape(encodeURIComponent(content))); try{const putRes=await fetch(apiUrl,{method:'PUT',headers:{Authorization:`token ${GITHUB_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({message:'Update products via app',content:b64,sha,branch})}); if(!putRes.ok) throw new Error(); alert('products.json updated');}catch{alert('Failed to update products.json');} }
     function onExportProducts(){ const b=new Blob([JSON.stringify(products,null,2)],{type:'application/json'}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download='products.json'; a.click(); URL.revokeObjectURL(u); }
-    function onImportProductsFile(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{ try{const d=JSON.parse(r.result); if(Array.isArray(d)){ products=d; localStorage.setItem('products',JSON.stringify(products)); renderAdmin(); renderTicker(); } else throw new Error(); }catch{alert('Invalid products file');}}; r.readAsText(f); importProdInput.value=''; }
-    function switchSection(section){ if(section==='Admin'){ btnAdmin.classList.add('active'); btnTicker.classList.remove('active'); document.getElementById('sectionAdmin').classList.add('active'); document.getElementById('sectionTicker').classList.remove('active'); } else { btnTicker.classList.add('active'); btnAdmin.classList.remove('active'); document.getElementById('sectionTicker').classList.add('active'); document.getElementById('sectionAdmin').classList.remove('active'); }}
-    function applyAll(){ tickerWrapper.style.height = heightPx+'px'; tickerWrapper.style.setProperty('--item-height', itemHeight+'px'); tickerWrapper.style.setProperty('--name-font', nameFont+'px'); tickerWrapper.style.setProperty('--price-font', priceFont+'px'); }
-    function renderAdmin(){ productList.innerHTML=''; products.forEach((p,i)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td><img src="${p.imageUrl}" height="50"></td><td>${p.name}</td><td>${p.oldPrice}</td><td>${p.newPrice}</td><td><button onclick="editProduct(${i})">Edit</button> <button onclick="deleteProduct(${i})">Delete</button></td>`; productList.appendChild(tr); }); }
-    function renderTicker(){ tickerContent.innerHTML=''; products.concat(products).forEach(p=>tickerContent.appendChild(createItem(p))); const originals=Array.from(tickerContent.children).slice(0,products.length); let total=originals.reduce((s,el)=>s+el.getBoundingClientRect().width+50,0); tickerContent.style.animationDuration=((total/100)*speed)+'s'; }
-    function createItem(p){ const item=document.createElement('div'); item.className='ticker-item'; item.innerHTML=`<img src="${p.imageUrl}"/><div class="ticker-item-details"><div class="ticker-item-name">${p.name}</div><div class="ticker-prices"><span class="old-price">${p.oldPrice}</span><span class="new-price">${p.newPrice}</span></div></div>`; return item; }
-    function deleteProduct(i){ products.splice(i,1); localStorage.setItem('products',JSON.stringify(products)); renderAdmin(); renderTicker(); }
-    function editProduct(i){ const p=products[i]; form.name.value=p.name; form.oldPrice.value=p.oldPrice; form.newPrice.value=p.newPrice; form.imageUrl.value=p.imageUrl; editIndex=i; }
+    function onImportProductsFile(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=()=>{try{const d=JSON.parse(r.result); if(Array.isArray(d)){products=d;localStorage.setItem('products',JSON.stringify(products));renderAdmin();renderTicker();}else throw new Error();}catch{alert('Invalid products file');}}; r.readAsText(f); importProdInput.value=''; }
+    function switchSection(section){ if(section==='Admin'){btnAdmin.classList.add('active');btnTicker.classList.remove('active');document.getElementById('sectionAdmin').classList.add('active');document.getElementById('sectionTicker').classList.remove('active');}else{btnTicker.classList.add('active');btnAdmin.classList.remove('active');document.getElementById('sectionTicker').classList.add('active');document.getElementById('sectionAdmin').classList.remove('active');}}
+    function applyAll(){tickerWrapper.style.height=heightPx+'px';tickerWrapper.style.setProperty('--item-height',itemHeight+'px');tickerWrapper.style.setProperty('--name-font',nameFont+'px');tickerWrapper.style.setProperty('--price-font',priceFont+'px');}
+    function renderAdmin(){productList.innerHTML='';products.forEach((p,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td><img src="${p.imageUrl}" height="50"></td><td>${p.name}</td><td>${p.oldPrice}</td><td>${p.newPrice}</td><td><button onclick="editProduct(${i})">Edit</button> <button onclick="deleteProduct(${i})">Delete</button></td>`;productList.appendChild(tr);});}
+    function renderTicker(){tickerContent.innerHTML='';products.concat(products).forEach(p=>tickerContent.appendChild(createItem(p)));const originals=Array.from(tickerContent.children).slice(0,products.length);let total=originals.reduce((s,el)=>s+el.getBoundingClientRect().width+50,0);tickerContent.style.animationDuration=((total/100)*speed)+'s';}
+    function createItem(p){const item=document.createElement('div');item.className='ticker-item';item.innerHTML=`<img src="${p.imageUrl}"/><div class="ticker-item-details"><div class="ticker-item-name">${p.name}</div><div class="ticker-prices"><span class="old-price">${p.oldPrice}</span><span class="new-price">${p.newPrice}</span></div></div>`;return item;}
+    function deleteProduct(i){products.splice(i,1);localStorage.setItem('products',JSON.stringify(products));renderAdmin();renderTicker();}
+    function editProduct(i){const p=products[i];form.name.value=p.name;form.oldPrice.value=p.oldPrice;form.newPrice=value= p.newPrice;form.imageUrl.value=p.imageUrl;editIndex=i;}
     document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
