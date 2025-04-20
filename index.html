@@ -29,8 +29,6 @@
       border-radius: 4px;
     }
     header button.active { background: #007acc; }
-
-    /* Hide header in fullscreen */
     :fullscreen header { display: none !important; }
 
     /* Sections */
@@ -46,7 +44,7 @@
     .control-group label { display: block; margin-bottom: 5px; font-weight: bold; }
     .control-group input { width: 100%; padding: 8px; }
     #settingsButtons { margin-bottom: 20px; }
-    #settingsButtons button { margin-right: 10px; }
+    #settingsButtons button, #settingsButtons input { margin-right: 10px; }
     form { max-width: 500px; margin-bottom: 20px; }
     form input { display: block; width: 100%; margin-bottom: 10px; padding: 8px; }
     form button { padding: 10px 15px; }
@@ -95,9 +93,7 @@
       font-size: var(--price-font);
       text-align: center;
       padding: 0 10px;
-      position: relative;
     }
-    /* Strikethrough on old price */
     .ticker-prices .old-price {
       color: #000;
       border-right: 1px solid #000;
@@ -123,6 +119,8 @@
     <div id="settingsButtons">
       <button id="exportBtn">Export Settings</button>
       <button id="importBtn">Import Settings</button>
+      <button id="saveSettingsBtn">Save Settings to GitHub</button>
+      <input type="text" id="ghToken" placeholder="GitHub Token" style="width:200px;">
       <button id="exportProdBtn">Export Products</button>
       <button id="importProdBtn">Import Products</button>
       <input type="file" id="importInput" accept="application/json" style="display:none;">
@@ -170,8 +168,8 @@
   </section>
 
   <script>
+    // Load settings.json and products.json, then initialize
     async function init() {
-      // Try loading settings.json
       try {
         const resp = await fetch('settings.json');
         if (resp.ok) {
@@ -183,19 +181,14 @@
           priceFont = s.priceFont || priceFont;
         }
       } catch {}
-      // Try loading products.json
       try {
         const resp2 = await fetch('products.json');
-        if (resp2.ok) {
-          products = await resp2.json();
-        }
+        if (resp2.ok) products = await resp2.json();
       } catch {}
-      applyAll();
-      renderAdmin();
-      renderTicker();
+      applyAll(); renderAdmin(); renderTicker();
     }
 
-    // Load from localStorage defaults
+    // Defaults from localStorage
     let products = JSON.parse(localStorage.getItem('products') || '[]');
     let speed = parseFloat(localStorage.getItem('tickerSpeed')) || 0.5;
     let heightPx = parseInt(localStorage.getItem('tickerHeight')) || window.innerHeight;
@@ -203,6 +196,7 @@
     let nameFont = parseFloat(localStorage.getItem('tickerNameFont')) || 28.8;
     let priceFont = parseFloat(localStorage.getItem('tickerPriceFont')) || 22.4;
 
+    // DOM elements
     const form = document.getElementById('productForm');
     const productList = document.getElementById('productList');
     const tickerContent = document.getElementById('tickerContent');
@@ -214,6 +208,7 @@
     const priceFontInput = document.getElementById('priceFontInput');
     const exportBtn = document.getElementById('exportBtn');
     const importBtn = document.getElementById('importBtn');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
     const exportProdBtn = document.getElementById('exportProdBtn');
     const importProdBtn = document.getElementById('importProdBtn');
     const importInput = document.getElementById('importInput');
@@ -221,8 +216,10 @@
     const btnAdmin = document.getElementById('btnAdmin');
     const btnTicker = document.getElementById('btnTicker');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const ghTokenInput = document.getElementById('ghToken');
     let editIndex = -1;
 
+    // Init control values
     speedInput.value = speed;
     heightInput.value = heightPx;
     itemHeightInput.value = itemHeight;
@@ -239,6 +236,7 @@
     exportBtn.addEventListener('click', onExportSettings);
     importBtn.addEventListener('click', () => importInput.click());
     importInput.addEventListener('change', onImportSettingsFile);
+    saveSettingsBtn.addEventListener('click', saveSettingsToGitHub);
     exportProdBtn.addEventListener('click', onExportProducts);
     importProdBtn.addEventListener('click', () => importProdInput.click());
     importProdInput.addEventListener('change', onImportProductsFile);
@@ -252,26 +250,145 @@
       fullscreenBtn.textContent = document.fullscreenElement ? 'Exit Full Screen' : 'Full Screen';
     });
 
-    // Handlers (unchanged)
-    function onSpeedChange() { speed = parseFloat(speedInput.value)||0.5; localStorage.setItem('tickerSpeed', speed); renderTicker(); }
-    function onHeightChange(){ heightPx=parseInt(heightInput.value)||window.innerHeight; localStorage.setItem('tickerHeight',heightPx); tickerWrapper.style.height=heightPx+'px'; }
-    function onItemHeightChange(){ itemHeight=parseInt(itemHeightInput.value)||150; localStorage.setItem('tickerItemHeight',itemHeight); tickerWrapper.style.setProperty('--item-height',itemHeight+'px'); renderTicker(); }
-    function onNameFontChange(){ nameFont=parseFloat(nameFontInput.value)||28.8; localStorage.setItem('tickerNameFont',nameFont); tickerWrapper.style.setProperty('--name-font',nameFont+'px'); }
-    function onPriceFontChange(){ priceFont=parseFloat(priceFontInput.value)||22.4; localStorage.setItem('tickerPriceFont',priceFont); tickerWrapper.style.setProperty('--price-font',priceFont+'px'); }
-    function onFormSubmit(e){ e.preventDefault(); const p={name:form.name.value,oldPrice:form.oldPrice.value,newPrice:form.newPrice.value,imageUrl:form.imageUrl.value}; if(editIndex>-1){products[editIndex]=p; editIndex=-1;}else products.push(p); form.reset(); localStorage.setItem('products',JSON.stringify(products)); renderAdmin(); renderTicker(); }
-    function onExportSettings(){ const s={speed,heightPx,itemHeight,nameFont,priceFont}; const b=new Blob([JSON.stringify(s,null,2)],{type:'application/json'}); const u=URL.createObjectURL(b); const a=document.createElement('a');a.href=u;a.download='settings.json';a.click();URL.revokeObjectURL(u);}    
-    function onImportSettingsFile(e){ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{try{const d=JSON.parse(r.result); speed=d.speed||speed;heightPx=d.heightPx||heightPx;itemHeight=d.itemHeight||itemHeight;nameFont=d.nameFont||nameFont;priceFont=d.priceFont||priceFont;localStorage.setItem('tickerSpeed',speed);localStorage.setItem('tickerHeight',heightPx);localStorage.setItem('tickerItemHeight',itemHeight);localStorage.setItem('tickerNameFont',nameFont);localStorage.setItem('tickerPriceFont',priceFont);applyAll();renderTicker();speedInput.value=speed;heightInput.value=heightPx;itemHeightInput.value=itemHeight;nameFontInput.value=nameFont;priceFontInput.value=priceFont;}catch{alert('Invalid settings file');}};r.readAsText(f);importInput.value='';}
-    function onExportProducts(){ const b=new Blob([JSON.stringify(products,null,2)],{type:'application/json'}); const u=URL.createObjectURL(b); const a=document.createElement('a');a.href=u;a.download='products.json';a.click();URL.revokeObjectURL(u);}    
-    function onImportProductsFile(e){ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{try{const d=JSON.parse(r.result); if(Array.isArray(d)){products=d; localStorage.setItem('products',JSON.stringify(products)); renderAdmin(); renderTicker();}else throw Error();}catch{alert('Invalid products file');}};r.readAsText(f);importProdInput.value='';}
-    function switchSection(sec){if(sec==='Admin'){btnAdmin.classList.add('active');btnTicker.classList.remove('active');document.getElementById('sectionAdmin').classList.add('active');document.getElementById('sectionTicker').classList.remove('active');}else{btnTicker.classList.add('active');btnAdmin.classList.remove('active');document.getElementById('sectionTicker').classList.add('active');document.getElementById('sectionAdmin').classList.remove('active');}}
-    function applyAll(){tickerWrapper.style.height=heightPx+'px';tickerWrapper.style.setProperty('--item-height',itemHeight+'px');tickerWrapper.style.setProperty('--name-font',nameFont+'px');tickerWrapper.style.setProperty('--price-font',priceFont+'px');}
-    function renderAdmin(){productList.innerHTML='';products.forEach((p,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td><img src="${p.imageUrl}" height="50"></td><td>${p.name}</td><td>${p.oldPrice}</td><td>${p.newPrice}</td><td><button onclick="editProduct(${i})">Edit</button> <button onclick="deleteProduct(${i})">Delete</button></td>`;productList.appendChild(tr);});}
-    function renderTicker(){tickerContent.innerHTML='';products.concat(products).forEach(p=>tickerContent.appendChild(createItem(p)));const orig=Array.from(tickerContent.children).slice(0,products.length);let total=orig.reduce((s,el)=>s+el.getBoundingClientRect().width+50,0);const dur=(total/100)*speed;tickerContent.style.animationDuration=dur+'s';}
-    function createItem(p){const item=document.createElement('div');item.className='ticker-item';item.innerHTML=`<img src="${p.imageUrl}"><div class="ticker-item-details"><div class="ticker-item-name">${p.name}</div><div class="ticker-prices"><span class="old-price">${p.oldPrice}</span><span class="new-price">${p.newPrice}</span></div></div>`;return item;}
-    function deleteProduct(i){products.splice(i,1);localStorage.setItem('products',JSON.stringify(products));renderAdmin();renderTicker();}
-    function editProduct(i){const p=products[i];form.name.value=p.name;form.oldPrice.value=p.oldPrice;form.newPrice.value=p.newPrice;form.imageUrl.value=p.imageUrl;editIndex=i;}
+    // Handlers
+    function onSpeedChange() { speed = parseFloat(speedInput.value) || 0.5; localStorage.setItem('tickerSpeed', speed); renderTicker(); }
+    function onHeightChange() { heightPx = parseInt(heightInput.value) || window.innerHeight; localStorage.setItem('tickerHeight', heightPx); tickerWrapper.style.height = heightPx + 'px'; }
+    function onItemHeightChange() { itemHeight = parseInt(itemHeightInput.value) || 150; localStorage.setItem('tickerItemHeight', itemHeight); tickerWrapper.style.setProperty('--item-height', itemHeight + 'px'); renderTicker(); }
+    function onNameFontChange() { nameFont = parseFloat(nameFontInput.value) || 28.8; localStorage.setItem('tickerNameFont', nameFont); tickerWrapper.style.setProperty('--name-font', nameFont + 'px'); }
+    function onPriceFontChange() { priceFont = parseFloat(priceFontInput.value) || 22.4; localStorage.setItem('tickerPriceFont', priceFont); tickerWrapper.style.setProperty('--price-font', priceFont + 'px'); }
+    function onFormSubmit(e) { e.preventDefault(); const p = { name: form.name.value, oldPrice: form.oldPrice.value, newPrice: form.newPrice.value, imageUrl: form.imageUrl.value }; if (editIndex > -1) { products[editIndex] = p; editIndex = -1; } else { products.push(p); } form.reset(); localStorage.setItem('products', JSON.stringify(products)); renderAdmin(); renderTicker(); }
 
-    // start
+    function onExportSettings() {
+      const blob = new Blob([JSON.stringify({ speed, heightPx, itemHeight, nameFont, priceFont },null,2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'settings.json'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    function onImportSettingsFile(e) {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          speed = data.speed || speed;
+          heightPx = data.heightPx || heightPx;
+          itemHeight = data.itemHeight || itemHeight;
+          nameFont = data.nameFont || nameFont;
+          priceFont = data.priceFont || priceFont;
+          localStorage.setItem('tickerSpeed', speed);
+          localStorage.setItem('tickerHeight', heightPx);
+          localStorage.setItem('tickerItemHeight', itemHeight);
+          localStorage.setItem('tickerNameFont', nameFont);
+          localStorage.setItem('tickerPriceFont', priceFont);
+          applyAll(); renderTicker();
+          speedInput.value = speed;
+          heightInput.value = heightPx;
+          itemHeightInput.value = itemHeight;
+          nameFontInput.value = nameFont;
+          priceFontInput.value = priceFont;
+        } catch { alert('Invalid settings file'); }
+      };
+      reader.readAsText(file);
+      importInput.value = '';
+    }
+
+    async function saveSettingsToGitHub() {
+      const token = ghTokenInput.value.trim();
+      if (!token) return alert('Please enter your GitHub Token');
+      const owner = 'ozanhatil';
+      const repo = 'product-ticker';
+      const path = 'settings.json';
+      const branch = 'main';
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      let sha;
+      try {
+        const res = await fetch(apiUrl, { headers: { Authorization: `token ${token}` }});
+        const data = await res.json(); sha = data.sha;
+      } catch { return alert('Error fetching file SHA'); }
+      const contentStr = JSON.stringify({ speed, heightPx, itemHeight, nameFont, priceFont },null,2);
+      const b64 = btoa(unescape(encodeURIComponent(contentStr)));
+      try {
+        const putRes = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Update settings via app', content: b64, sha, branch })
+        });
+        if (!putRes.ok) throw new Error();
+        alert('settings.json updated successfully');
+      } catch { alert('Failed to update settings.json'); }
+    }
+
+    function onExportProducts() {
+      const blob = new Blob([JSON.stringify(products,null,2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'products.json'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    function onImportProductsFile(e) {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          if (Array.isArray(data)) {
+            products = data;
+            localStorage.setItem('products', JSON.stringify(products));
+            renderAdmin(); renderTicker();
+          } else throw new Error();
+        } catch { alert('Invalid products file'); }
+      };
+      reader.readAsText(file);
+      importProdInput.value = '';
+    }
+
+    function switchSection(section) {
+      if (section === 'Admin') {
+        btnAdmin.classList.add('active'); btnTicker.classList.remove('active');
+        document.getElementById('sectionAdmin').classList.add('active');
+        document.getElementById('sectionTicker').classList.remove('active');
+      } else {
+        btnTicker.classList.add('active'); btnAdmin.classList.remove('active');
+        document.getElementById('sectionTicker').classList.add('active');
+        document.getElementById('sectionAdmin').classList.remove('active');
+      }
+    }
+
+    function applyAll() {
+      tickerWrapper.style.height = heightPx + 'px';
+      tickerWrapper.style.setProperty('--item-height', itemHeight + 'px');
+      tickerWrapper.style.setProperty('--name-font', nameFont + 'px');
+      tickerWrapper.style.setProperty('--price-font', priceFont + 'px');
+    }
+
+    function renderAdmin() {
+      productList.innerHTML = '';
+      products.forEach((p, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><img src="${p.imageUrl}" height="50"></td><td>${p.name}</td><td>${p.oldPrice}</td><td>${p.newPrice}</td><td><button onclick="editProduct(${i})">Edit</button> <button onclick="deleteProduct(${i})">Delete</button></td>`;
+        productList.appendChild(tr);
+      });
+    }
+
+    function renderTicker() {
+      tickerContent.innerHTML = '';
+      products.concat(products).forEach(p => tickerContent.appendChild(createItem(p)));
+      const originals = Array.from(tickerContent.children).slice(0, products.length);
+      let totalWidth = originals.reduce((sum, el) => sum + el.getBoundingClientRect().width + 50, 0);
+      const duration = (totalWidth/100)*speed;
+      tickerContent.style.animationDuration = duration + 's';
+    }
+
+    function createItem(p) {
+      const item = document.createElement('div');
+      item.className = 'ticker-item';
+      item.innerHTML = `<img src="${p.imageUrl}" /><div class="ticker-item-details"><div class="ticker-item-name">${p.name}</div><div class="ticker-prices"><span class="old-price">${p.oldPrice}</span><span class="new-price">${p.newPrice}</span></div></div>`;
+      return item;
+    }
+
+    function deleteProduct(i) { products.splice(i, 1); localStorage.setItem('products', JSON.stringify(products)); renderAdmin(); renderTicker(); }
+
+    function editProduct(i) { const p = products[i]; form.name.value = p.name; form.oldPrice.value = p.oldPrice; form.newPrice.value = p.newPrice; form.imageUrl.value = p.imageUrl; editIndex = i; }
+
     document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
