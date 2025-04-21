@@ -2,6 +2,6 @@
   "speed": 10,
   "heightPx": 1200,
   "itemHeight": 400,
-  "nameFont": 40,
-  "priceFont": 60
+  "nameFont": 140,
+  "priceFont": 100
 }
